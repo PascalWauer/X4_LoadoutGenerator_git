@@ -11,22 +11,17 @@ namespace XmlCrawler
     public class XmlReader
     {
         private string m_path;
-        /// <summary>
-        /// Output is in folder of the c# project bin or debug folder
-        /// </summary>
-        /// <param name="path"></param>
         public XmlReader(string path)
         {
-            Console.WriteLine("This program will create loadout files containing a loadout for each ship file it can read.");
             Console.WriteLine("Enter path to ship files:");
             m_path = Console.ReadLine();
 
             var files = Directory.GetFiles(m_path, "*.xml", SearchOption.AllDirectories);
 
-            if (!Directory.Exists(@"..\loadouts"))
-                Directory.CreateDirectory(@"..\loadouts");
+            if (!Directory.Exists(@"..\loadoutmod"))
+                Directory.CreateDirectory(@"..\loadoutmod");
 
-            //using (StreamWriter sw = new StreamWriter(@"..\loadouts\output.xml"))
+            //using (StreamWriter sw = new StreamWriter(@"..\loadoutmod\output.xml"))
             {
                 foreach (var file in files)
                 {
@@ -34,7 +29,7 @@ namespace XmlCrawler
                     {
                         string fileName = file.Split("\\").Last().Replace(".xml", "_macro.xml");
 
-                        using (StreamWriter sw = new StreamWriter(@"..\loadouts\" + fileName))
+                        using (StreamWriter sw = new StreamWriter(@"..\loadoutmod\" + fileName))
                         {
 
                             sw.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
@@ -62,7 +57,7 @@ namespace XmlCrawler
                             string largeWeapon = "weapon_arg_l_destroyer_01_mk1_macro";
 
                             //paranid
-                            if (file.Contains("_par_") || file.Contains("canteran") || file.Contains("omicron") || file.Contains("split") || file.Contains("xl_cargo_hauler_3") || file.Contains("sucellus"))
+                            if (file.Contains("_par_") || file.Contains("canteran") || file.Contains("omicron") || file.Contains("split") || file.Contains("xl_cargo_hauler_3") || file.Contains("sucellus") || file.Contains("_ter_"))
                             {
                                 largeTurret = "turret_par_l_laser_01_mk1_macro";
                                 mediumTurret = "turret_par_m_gatling_02_mk1_macro";
@@ -85,18 +80,7 @@ namespace XmlCrawler
                                 engineExtraLarge = "engine_tel_xl_allround_01_mk1_macro";
                                 largeWeapon = "weapon_tel_l_destroyer_01_mk1_macro";
                             }
-                            //split
-                            if (file.Contains("_spl_") || file.Contains("_sp_") || file.Contains("_split_"))
-                            {
-                                largeTurret = "turret_spl_l_laser_01_mk1_macro";
-                                mediumTurret = "turret_spl_m_beam_02_mk1_macro";
-                                mediumShield = "shield_spl_m_standard_02_mk1_macro";
-                                largeShield = "shield_spl_l_standard_01_mk1_macro";
-                                extraLargeShield = "shield_spl_xl_standard_01_mk1_macro";
-                                engineLarge = "engine_spl_l_allround_01_mk1_macro";
-                                engineExtraLarge = "engine_spl_xl_allround_01_mk1_macro";
-                                largeWeapon = "weapon_spl_l_destroyer_01_mk1_macro";
-                            }
+
 
                             var doc = XDocument.Load(file);
                             var shieldsExtralarge = doc.Descendants("connection").Where(x => (x.Attribute("tags") != null && x.Attribute("tags").Value.Contains("shield") && x.Attribute("tags").Value.Contains("extralarge"))).ToList();
@@ -104,6 +88,8 @@ namespace XmlCrawler
                             {
                                 sw.WriteLine("\t\t\t<shield macro=\"" + extraLargeShield + "\" path=\"../" + item.Attribute("name").Value + "\" />");
                             }
+                            // internal shield generators
+                            sw.WriteLine("\t\t\t<shield macro=\"" + "ishield_" + fileName.Replace(".xml", "") + "\" path=\".. / con_ishield_01\" exact=\"1\" optional=\"0\" />");
                             var shieldsLarge = doc.Descendants("connection").Where(x => (x.Attribute("tags") != null && x.Attribute("tags").Value.Contains("shield") && x.Attribute("tags").Value.Contains("large") && !x.Attribute("tags").Value.Contains("extralarge") && x.Attribute("group") == null)).ToList();
                             foreach (var item in shieldsLarge)
                             {
@@ -183,11 +169,9 @@ namespace XmlCrawler
                             sw.WriteLine("</diff>");
                         }
                     }
-
                 }
             }
-            Console.WriteLine("The loadoutfiles have been created and should be located next to this Exe.");
-            Console.ReadLine();
+
         }
         private List<Tuple<XElement, int>> GetDistinctlist(List<XElement> list)
         {
